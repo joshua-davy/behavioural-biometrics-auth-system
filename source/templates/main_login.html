@@ -1,0 +1,525 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Main Login</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+
+      .section {
+        margin-top: 25px;
+        padding-top: 10px;
+        border-top: 1px solid #ccc;
+      }
+
+      .card {
+        width: 120px;
+        height: 80px;
+        border: 6px solid black;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 8px;
+        user-select: none;
+        font-weight: bold;
+        transition: border-color 0.2s;
+      }
+
+      .red {
+        border-color: #ff4d4d !important;
+      }
+      .blue {
+        border-color: #3399ff !important;
+      }
+      .green {
+        border-color: #33cc33 !important;
+      }
+      .pink {
+        border-color: #ff66cc !important;
+      }
+      .yellow {
+        border-color: #ffd633 !important;
+      }
+      .orange {
+        border-color: #ff9933 !important;
+      }
+
+      #graphicalErrorText {
+        color: red;
+        font-weight: bold;
+      }
+      .card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      button {
+        padding: 8px 14px;
+        cursor: pointer;
+      }
+
+      input,
+      textarea {
+        padding: 6px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>Main Login</h2>
+
+    {% if error %}
+    <p style="color: red; font-weight: bold">{{ error }}</p>
+    {% endif %} {% if attempts_left is not none %}
+    <p><b>Attempts left:</b> {{ attempts_left }}</p>
+    {% endif %} {% if final_result == "logged in" %}
+    <p style="color: green; font-weight: bold">LOGIN SUCCESSFUL</p>
+    {% endif %} {% if final_result == "not logged in" %}
+    <p style="color: red; font-weight: bold">LOGIN FAILED</p>
+    {% endif %}
+
+    <form method="POST" action="/main/login" id="mainLoginForm">
+      <input type="hidden" name="prompt_loaded" value="{% if prompt %}1{% else %}0{% endif %}" />
+
+      <h3>Username</h3>
+      <input type="text" name="username" id="loginUsernameBox" required value="{{ username if username else '' }}" />
+
+      <div class="section">
+        <h2>Keystroke Login</h2>
+        <p><b>{{ prompt if prompt else "Enter username and press Enter to load the prompt." }}</b></p>
+
+        <textarea name="typed" id="typedLoginBox" rows="1" cols="60" autofocus>{{ typed if typed else "" }}</textarea>
+
+        <input type="hidden" name="events" id="eventsField" />
+        <input type="hidden" name="login_duration_seconds" id="loginDurationField" />
+
+        <input type="hidden" name="keystroke_time" id="keystrokeTimeField" />
+        <input type="hidden" name="graphical_time" id="graphicalTimeField" />
+        <input type="hidden" name="mouse_time" id="mouseTimeField" />
+
+        <div id="loginFormError" style="color: red; font-weight: bold; margin-top: 10px"></div>
+      </div>
+
+      <div class="section">
+        <h2>Graphical Login</h2>
+
+        <p>
+          Use Left/Right arrows to rotate colours.<br />
+          When your chosen animal is showing your chosen colour, press Enter.
+        </p>
+
+        <div id="graphicalLoginCards" tabindex="-1">
+          <div class="card"><img src="{{ url_for('static', filename='images/dog1.jpg') }}" alt="Dog" /></div>
+          <div class="card"><img src="{{ url_for('static', filename='images/cat1.jpg') }}" alt="Cat" /></div>
+          <div class="card"><img src="{{ url_for('static', filename='images/rab1.jpg') }}" alt="Rabbit" /></div>
+          <div class="card"><img src="{{ url_for('static', filename='images/snake1.jpg') }}" alt="Snake" /></div>
+          <div class="card"><img src="{{ url_for('static', filename='images/bird1.jpg') }}" alt="Bird" /></div>
+          <div class="card"><img src="{{ url_for('static', filename='images/frog1.jpg') }}" alt="Frog" /></div>
+        </div>
+
+        <input type="hidden" name="dog_colour" id="dogColourField" />
+        <input type="hidden" name="cat_colour" id="catColourField" />
+        <input type="hidden" name="rabbit_colour" id="rabbitColourField" />
+        <input type="hidden" name="snake_colour" id="snakeColourField" />
+        <input type="hidden" name="bird_colour" id="birdColourField" />
+        <input type="hidden" name="frog_colour" id="frogColourField" />
+
+        <p id="graphicalErrorText"></p>
+      </div>
+
+      <div class="section">
+        <h2>Mouse Login</h2>
+        <div id="grid"></div>
+        <input type="hidden" name="mouse_sample" id="sampleField" />
+      </div>
+
+      <br /><br />
+      <button type="submit">Submit Main Login</button>
+    </form>
+
+    <div class="section">
+      <h2>Use One-Time Backup Code</h2>
+
+      <form method="POST" action="/main/login">
+        <input type="hidden" name="use_backup" value="1" />
+        <input type="hidden" name="username" value="{{ username if username else '' }}" />
+
+        <p>Backup Code</p>
+        <input type="text" name="backup_code" required />
+
+        <button type="submit">Use Backup Code</button>
+      </form>
+    </div>
+
+    <form method="GET" action="/export-combined-attempts" style="margin-top: 20px">
+      <button type="submit">Export CSV</button>
+    </form>
+
+    <div class="section">
+      <details>
+        <summary><b>Debug Output</b></summary>
+
+        <div style="margin-top: 15px; border: 1px solid #ccc; padding: 15px">
+          <p><b>Final Result:</b> {{ final_result }}</p>
+          <p><b>Keystroke Result:</b> {{ keystroke_result }}</p>
+          <p><b>Graphical Result:</b> {{ graphical_result }}</p>
+          <p><b>Mouse Result:</b> {{ mouse_result }}</p>
+
+          <hr />
+
+          <h3>Keystroke</h3>
+          <p><b>Prompt:</b> {{ prompt }}</p>
+          <p><b>Typed:</b> {{ typed }}</p>
+          <p><b>Prompt Match:</b> {{ prompt_match }}</p>
+
+          {% if keystroke_avg_z is not none %}
+          <p><b>Average Z:</b> {{ keystroke_avg_z }}</p>
+          {% endif %} {% if keystroke_max_z is not none %}
+          <p><b>Max Z:</b> {{ keystroke_max_z }}</p>
+          {% endif %} {% if keystroke_similarity is not none %}
+          <p><b>Similarity:</b> {{ keystroke_similarity }}</p>
+          {% endif %}
+
+          <hr />
+
+          <h3>Graphical</h3>
+          <p><b>Selected Animal:</b> {{ graphical_selected_animal }}</p>
+          <p><b>Selected Colour:</b> {{ graphical_selected_colour }}</p>
+
+          <hr />
+
+          <h3>Mouse</h3>
+
+          {% if mouse_sample_debug %}
+          <p><b>Sample:</b></p>
+          <pre>{{ mouse_sample_debug | tojson(indent=2) }}</pre>
+          {% endif %} {% if mouse_avg_z is not none %}
+          <p><b>Average Z:</b> {{ mouse_avg_z }}</p>
+          {% endif %} {% if mouse_max_z is not none %}
+          <p><b>Max Z:</b> {{ mouse_max_z }}</p>
+          {% endif %} {% if mouse_similarity is not none %}
+          <p><b>Similarity:</b> {{ mouse_similarity }}</p>
+          {% endif %} {% if mouse_z_breakdown %}
+          <p><b>Z Breakdown:</b></p>
+          <pre>{{ mouse_z_breakdown | tojson(indent=2) }}</pre>
+          {% endif %} {% if total_login_time is not none %}
+          <p><b>Total Login Time:</b> {{ total_login_time }} seconds</p>
+          {% endif %}
+        </div>
+      </details>
+    </div>
+
+    <script>
+      const mainLoginForm = document.getElementById("mainLoginForm");
+      const loginUsernameBox = document.getElementById("loginUsernameBox");
+
+      const typedLoginBox = document.getElementById("typedLoginBox");
+      const eventsField = document.getElementById("eventsField");
+      const loginDurationField = document.getElementById("loginDurationField");
+      const loginFormError = document.getElementById("loginFormError");
+
+      const graphicalCards = document.querySelectorAll("#graphicalLoginCards .card");
+      const graphicalLoginCards = document.getElementById("graphicalLoginCards");
+      const dogColourField = document.getElementById("dogColourField");
+      const catColourField = document.getElementById("catColourField");
+      const rabbitColourField = document.getElementById("rabbitColourField");
+      const snakeColourField = document.getElementById("snakeColourField");
+      const birdColourField = document.getElementById("birdColourField");
+      const frogColourField = document.getElementById("frogColourField");
+      const graphicalErrorText = document.getElementById("graphicalErrorText");
+
+      const grid = document.getElementById("grid");
+      const sampleField = document.getElementById("sampleField");
+
+      const events = [];
+      const colours = ["red", "blue", "green", "pink", "yellow", "orange"];
+      const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+      const keystrokeTimeField = document.getElementById("keystrokeTimeField");
+      const graphicalTimeField = document.getElementById("graphicalTimeField");
+      const mouseTimeField = document.getElementById("mouseTimeField");
+
+      let loginStartTime = null;
+      let graphicalColourIndex = 0;
+
+      let mouseNextExpected = 1;
+      let mouseLastTime = null;
+      let mouseClickTimes = [];
+
+      let keystrokeStart = null;
+      let keystrokeEnd = null;
+      let graphicalStart = null;
+      let graphicalEnd = null;
+      let mouseStart = null;
+      let mouseEnd = null;
+
+      function nowMs() {
+        return performance.now();
+      }
+
+      function normaliseText(s) {
+        return s.toLowerCase().trim().replace(/\s+/g, " ");
+      }
+
+      function allowedKey(key) {
+        return key.length === 1 || key === " " || key === "Backspace";
+      }
+
+      function blockPasting(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
+          e.preventDefault();
+        }
+      }
+
+      function validateKeystrokeLogin() {
+        const expectedPrompt = normaliseText(`{{ prompt if prompt else "" }}`);
+        const typedPrompt = normaliseText(typedLoginBox.value);
+
+        if (!expectedPrompt) {
+          loginFormError.innerHTML = "ERROR: Load the user first.";
+          return false;
+        }
+
+        if (typedPrompt !== expectedPrompt) {
+          loginFormError.innerHTML = "ERROR: Prompt must be typed exactly as shown.";
+          return false;
+        }
+
+        loginFormError.innerHTML = "";
+        return true;
+      }
+
+      function updateGraphicalFields() {
+        dogColourField.value = colours[(graphicalColourIndex + 0) % colours.length];
+        catColourField.value = colours[(graphicalColourIndex + 1) % colours.length];
+        rabbitColourField.value = colours[(graphicalColourIndex + 2) % colours.length];
+        snakeColourField.value = colours[(graphicalColourIndex + 3) % colours.length];
+        birdColourField.value = colours[(graphicalColourIndex + 4) % colours.length];
+        frogColourField.value = colours[(graphicalColourIndex + 5) % colours.length];
+      }
+
+      function applyGraphicalColours() {
+        if (!graphicalCards.length) return;
+
+        graphicalCards.forEach((card, i) => {
+          card.classList.remove("red", "blue", "green", "pink", "yellow", "orange");
+          const colour = colours[(graphicalColourIndex + i) % colours.length];
+          card.classList.add(colour);
+        });
+
+        updateGraphicalFields();
+      }
+
+      function shuffle(arr) {
+        return arr.sort(() => Math.random() - 0.5);
+      }
+
+      function buildMouseGrid() {
+        grid.innerHTML = "";
+        mouseNextExpected = 1;
+        mouseLastTime = null;
+        mouseClickTimes = [];
+
+        const order = shuffle([...numbers]);
+
+        order.forEach((num) => {
+          const cell = document.createElement("div");
+          cell.textContent = num;
+          cell.style.width = "80px";
+          cell.style.height = "80px";
+          cell.style.border = "2px solid black";
+          cell.style.display = "flex";
+          cell.style.alignItems = "center";
+          cell.style.justifyContent = "center";
+          cell.style.fontSize = "24px";
+          cell.style.margin = "4px";
+          cell.style.cursor = "pointer";
+          cell.addEventListener("click", () => handleMouseClick(num));
+          grid.append(cell);
+        });
+
+        grid.style.display = "grid";
+        grid.style.gridTemplateColumns = "repeat(3, 80px)";
+      }
+
+      function handleMouseClick(num) {
+        if (num !== mouseNextExpected) return;
+
+        const now = performance.now();
+
+        if (mouseStart === null) {
+          mouseStart = now;
+        }
+
+        if (mouseLastTime !== null) {
+          mouseClickTimes.push(Number((now - mouseLastTime).toFixed(2)));
+        }
+
+        mouseLastTime = now;
+        mouseNextExpected++;
+
+        if (mouseNextExpected === 10) {
+          mouseEnd = performance.now();
+          sampleField.value = JSON.stringify(mouseClickTimes);
+        }
+      }
+
+      typedLoginBox.addEventListener("keydown", (e) => {
+        blockPasting(e);
+
+        if (e.key === "Enter") {
+          e.preventDefault();
+
+          if (!validateKeystrokeLogin()) {
+            return;
+          }
+
+          if (keystrokeStart !== null && keystrokeEnd === null) {
+            keystrokeEnd = performance.now();
+          }
+
+          typedLoginBox.blur();
+
+          graphicalErrorText.textContent = "Keystroke section complete. Now complete graphical and mouse.";
+          graphicalCards[0].scrollIntoView({ behavior: "smooth", block: "center" });
+          graphicalLoginCards.focus();
+          return;
+        }
+
+        if (allowedKey(e.key) && keystrokeStart === null) {
+          keystrokeStart = performance.now();
+        }
+
+        if (allowedKey(e.key) && loginStartTime === null) {
+          loginStartTime = performance.now();
+        }
+
+        if (allowedKey(e.key)) {
+          events.push({
+            key: e.key,
+            type: "down",
+            t: nowMs()
+          });
+        }
+      });
+
+      typedLoginBox.addEventListener("keyup", (e) => {
+        if (allowedKey(e.key)) {
+          events.push({
+            key: e.key,
+            type: "up",
+            t: nowMs()
+          });
+        }
+      });
+
+      typedLoginBox.addEventListener("paste", (e) => e.preventDefault());
+      typedLoginBox.addEventListener("contextmenu", (e) => e.preventDefault());
+
+      loginUsernameBox.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          mainLoginForm.requestSubmit();
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (document.activeElement === loginUsernameBox || document.activeElement === typedLoginBox) {
+          return;
+        }
+
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          graphicalColourIndex = (graphicalColourIndex + 1) % colours.length;
+          applyGraphicalColours();
+          graphicalErrorText.textContent = "";
+        }
+
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          graphicalColourIndex = (graphicalColourIndex - 1 + colours.length) % colours.length;
+          applyGraphicalColours();
+          graphicalErrorText.textContent = "";
+        }
+
+        if (e.key === "Enter") {
+          e.preventDefault();
+
+          if (!validateKeystrokeLogin()) {
+            return;
+          }
+
+          updateGraphicalFields();
+          graphicalErrorText.textContent = "Graphical state captured. Complete mouse and submit.";
+        }
+      });
+
+      mainLoginForm.addEventListener("submit", (e) => {
+        eventsField.value = JSON.stringify(events);
+
+        if (!loginUsernameBox.value.trim()) {
+          e.preventDefault();
+          loginFormError.innerHTML = "ERROR: Please enter a username.";
+          return;
+        }
+
+        const promptLoaded = `{{ prompt if prompt else "" }}`.trim() !== "";
+
+        if (!promptLoaded) {
+          return;
+        }
+
+        if (!validateKeystrokeLogin()) {
+          e.preventDefault();
+          return;
+        }
+
+        if (
+          !dogColourField.value ||
+          !catColourField.value ||
+          !rabbitColourField.value ||
+          !snakeColourField.value ||
+          !birdColourField.value ||
+          !frogColourField.value
+        ) {
+          e.preventDefault();
+          graphicalErrorText.textContent =
+            "ERROR: Rotate colours and press Enter when your chosen animal shows your chosen colour.";
+          return;
+        }
+
+        if (mouseClickTimes.length !== 8) {
+          e.preventDefault();
+          alert("Please complete the mouse puzzle before submitting.");
+          return;
+        }
+
+        if (keystrokeStart !== null && keystrokeEnd !== null) {
+          keystrokeTimeField.value = ((keystrokeEnd - keystrokeStart) / 1000).toFixed(3);
+        }
+
+        if (graphicalStart !== null && graphicalEnd !== null) {
+          graphicalTimeField.value = ((graphicalEnd - graphicalStart) / 1000).toFixed(3);
+        }
+
+        if (mouseStart !== null && mouseEnd !== null) {
+          mouseTimeField.value = ((mouseEnd - mouseStart) / 1000).toFixed(3);
+        }
+
+        if (loginStartTime !== null) {
+          const loginEndTime = performance.now();
+          const seconds = (loginEndTime - loginStartTime) / 1000;
+          loginDurationField.value = seconds.toFixed(3);
+        }
+      });
+
+      buildMouseGrid();
+      applyGraphicalColours();
+    </script>
+  </body>
+</html>

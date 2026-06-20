@@ -1,0 +1,452 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Main Register</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+
+      .section {
+        margin-top: 25px;
+        padding-top: 10px;
+        border-top: 1px solid #ccc;
+      }
+
+      .card {
+        width: 120px;
+        height: 80px;
+        border: 6px solid black;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 8px;
+        user-select: none;
+        font-weight: bold;
+        transition: border-color 0.2s;
+      }
+
+      .red {
+        border-color: #ff4d4d !important;
+      }
+      .blue {
+        border-color: #3399ff !important;
+      }
+      .green {
+        border-color: #33cc33 !important;
+      }
+      .pink {
+        border-color: #ff66cc !important;
+      }
+      .yellow {
+        border-color: #ffd633 !important;
+      }
+      .orange {
+        border-color: #ff9933 !important;
+      }
+
+      .card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      button {
+        padding: 8px 14px;
+        cursor: pointer;
+      }
+
+      input,
+      textarea {
+        padding: 6px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2>Main Register</h2>
+
+    {% if error %}
+    <p style="color: red; font-weight: bold">{{ error }}</p>
+    {% endif %} {% if success %}
+    <p style="color: green; font-weight: bold">Registration complete.</p>
+
+    {% if registration_code %}
+    <div style="margin-top: 15px; padding: 12px; border: 1px solid #333; background: #f5f5f5">
+      <p><b>Your registration code:</b></p>
+      <pre style="font-size: 18px">{{ registration_code }}</pre>
+      <p>Save this code carefully. You will need it if you ever want to redo your metrics later.</p>
+    </div>
+    {% endif %}
+
+        <form method="GET" action="/main/login">
+    <input type="hidden" name="fresh" value="1" />
+    <button type="submit">Go to Main Login</button>
+        </form>
+
+    {% endif %} {% if not success %}
+    <form method="POST" id="mainRegisterForm">
+      <input type="hidden" name="step" value="{{ current_step }}" />
+
+      <h3>Username</h3>
+      <input
+        type="text"
+        name="username"
+        id="usernameBox"
+        required
+        value="{{ username if username else '' }}"
+        {%
+        if
+        current_step
+        !="keystroke"
+        %}readonly{%
+        endif
+        %} />
+
+      {% if current_step == "keystroke" %}
+      <div class="section">
+        <h2>Keystroke Registration</h2>
+        <p>Complete 3 sessions. Current session: {{ keystroke_count + 1 }}</p>
+
+        <h3>Pangram Test</h3>
+        <p><b>{{ pangram }}</b></p>
+        <textarea name="typed" id="typedBox" rows="1" cols="60" autofocus></textarea>
+
+        <h3>Coverage Test</h3>
+        <p><b>{{ coverage }}</b></p>
+        <textarea name="typed2" id="typedBox2" rows="1" cols="60"></textarea>
+
+        <input type="hidden" name="expected_pangram" value="{{ pangram }}" />
+        <input type="hidden" name="expected_coverage" value="{{ coverage }}" />
+        <input type="hidden" name="events_pangram" id="eventsPangramField" />
+        <input type="hidden" name="events_coverage" id="eventsCoverageField" />
+
+        <div id="keystrokeFormError" style="color: red; font-weight: bold; margin-top: 10px"></div>
+      </div>
+      {% endif %} {% if current_step == "graphical" %}
+      <div class="section">
+        <h2>Graphical Registration</h2>
+
+        <p>
+          Press either <b>1</b>, <b>2</b>,<b>3</b>,<b>4</b>,<b>5</b> or <b>6</b> to select an animal.<br />
+          Use <b>Left</b> / <b>Right</b> arrows to rotate the colours.
+        </p>
+
+        <div id="graphicalRegisterCards">
+          <div class="card"><img src="{{ url_for('static', filename='images/dog1.jpg') }}" alt="Dog" /></div>
+          <div class="card"><img src="{{ url_for('static', filename='images/cat1.jpg') }}" alt="Cat" /></div>
+          <div class="card"><img src="{{ url_for('static', filename='images/rab1.jpg') }}" alt="Rabbit" /></div>
+          <div class="card"><img src="{{ url_for('static', filename='images/snake1.jpg') }}" alt="Snake" /></div>
+          <div class="card"><img src="{{ url_for('static', filename='images/bird1.jpg') }}" alt="Bird" /></div>
+          <div class="card"><img src="{{ url_for('static', filename='images/frog1.jpg') }}" alt="Frog" /></div>
+        </div>
+
+        <input type="hidden" name="graphical_animal_index" id="graphicalAnimalIndexField" />
+        <input type="hidden" name="graphical_colour" id="graphicalColourField" />
+
+        <p id="graphicalErrorText" style="color: red; font-weight: bold"></p>
+      </div>
+      {% endif %} {% if current_step == "mouse" %}
+      <div class="section">
+        <h2>Mouse Registration</h2>
+
+        <p>Complete the puzzle 3 times.</p>
+
+        <div id="grid"></div>
+
+        {% if avg_profile %}
+        <p><b>Average Profile:</b></p>
+        <pre>{{ avg_profile | tojson(indent=2) }}</pre>
+        {% endif %} {% if std_profile %}
+        <p><b>Std Profile:</b></p>
+        <pre>{{ std_profile | tojson(indent=2) }}</pre>
+        {% endif %}
+
+        <input type="hidden" name="mouse_samples" id="samplesField" />
+      </div>
+      {% endif %}
+
+      <br /><br />
+      <button type="submit">
+        {% if current_step == "keystroke" %} Save Keystroke Session {% elif current_step == "graphical" %} Save
+        Graphical Registration {% elif current_step == "mouse" %} Save Mouse Registration {% endif %}
+      </button>
+    </form>
+    {% endif %}
+
+    <script>
+      const form = document.getElementById("mainRegisterForm");
+
+      if (form) {
+        const usernameBox = document.getElementById("usernameBox");
+
+        const typedBox = document.getElementById("typedBox");
+        const typedBox2 = document.getElementById("typedBox2");
+        const eventsPangramField = document.getElementById("eventsPangramField");
+        const eventsCoverageField = document.getElementById("eventsCoverageField");
+        const keystrokeFormError = document.getElementById("keystrokeFormError");
+
+        const graphicalCards = document.querySelectorAll("#graphicalRegisterCards .card");
+        const graphicalAnimalIndexField = document.getElementById("graphicalAnimalIndexField");
+        const graphicalColourField = document.getElementById("graphicalColourField");
+        const graphicalErrorText = document.getElementById("graphicalErrorText");
+
+        const grid = document.getElementById("grid");
+        const samplesField = document.getElementById("samplesField");
+        const mouseDebugContent = document.getElementById("mouseDebugContent");
+
+        const colours = ["red", "blue", "green", "pink", "yellow", "orange"];
+        const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+        let eventsPangram = [];
+        let eventsCoverage = [];
+
+        let graphicalColourIndex = 0;
+        let graphicalSelectedIndex = null;
+
+        let mouseNextExpected = 1;
+        let mouseLastTime = null;
+        let mouseClickTimes = [];
+        let mouseAllSamples = [];
+
+        function nowMs() {
+          return performance.now();
+        }
+
+        function allowedKey(key) {
+          return key.length === 1 || key === " " || key === "Backspace";
+        }
+
+        function blockPasting(e) {
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
+            e.preventDefault();
+          }
+        }
+
+        function applyGraphicalColours() {
+          if (!graphicalCards.length) return;
+
+          graphicalCards.forEach((card, i) => {
+            card.classList.remove("red", "blue", "green", "pink", "yellow", "orange");
+            const colour = colours[(graphicalColourIndex + i) % colours.length];
+            card.classList.add(colour);
+          });
+
+          if (graphicalSelectedIndex !== null) {
+            const colourOnSelected = colours[(graphicalColourIndex + graphicalSelectedIndex) % colours.length];
+            graphicalColourField.value = colourOnSelected;
+          }
+        }
+
+        function shuffle(arr) {
+          return arr.sort(() => Math.random() - 0.5);
+        }
+
+        function averageSamples(samples) {
+          if (samples.length === 0) return [];
+
+          const length = samples[0].length;
+          let avg = [];
+
+          for (let i = 0; i < length; i++) {
+            let sum = 0;
+            samples.forEach((s) => (sum += s[i]));
+            avg.push(Number((sum / samples.length).toFixed(2)));
+          }
+
+          return avg;
+        }
+
+        function updateMouseDebug() {
+          if (!mouseDebugContent) return;
+
+          let html = "";
+
+          mouseAllSamples.forEach((sample, index) => {
+            html += `<p><strong>Attempt ${index + 1}:</strong> ${JSON.stringify(sample)}</p>`;
+          });
+
+          if (mouseClickTimes.length > 0) {
+            html += `<p><strong>Current attempt:</strong> ${JSON.stringify(mouseClickTimes)}</p>`;
+          }
+
+          if (mouseAllSamples.length > 0) {
+            html += `<p><strong>Average so far:</strong> ${JSON.stringify(averageSamples(mouseAllSamples))}</p>`;
+          }
+
+          mouseDebugContent.innerHTML = html || "Waiting for input...";
+        }
+
+        function buildMouseGrid() {
+          if (!grid) return;
+
+          grid.innerHTML = "";
+          mouseNextExpected = 1;
+          mouseLastTime = null;
+          mouseClickTimes = [];
+          updateMouseDebug();
+
+          const order = shuffle([...numbers]);
+
+          order.forEach((num) => {
+            const cell = document.createElement("div");
+            cell.textContent = num;
+            cell.style.width = "80px";
+            cell.style.height = "80px";
+            cell.style.border = "2px solid black";
+            cell.style.display = "flex";
+            cell.style.alignItems = "center";
+            cell.style.justifyContent = "center";
+            cell.style.fontSize = "24px";
+            cell.style.margin = "4px";
+            cell.style.cursor = "pointer";
+            cell.addEventListener("click", () => handleMouseClick(num));
+            grid.append(cell);
+          });
+
+          grid.style.display = "grid";
+          grid.style.gridTemplateColumns = "repeat(3, 80px)";
+        }
+
+        function handleMouseClick(num) {
+          if (num !== mouseNextExpected) return;
+
+          const now = performance.now();
+
+          if (mouseLastTime !== null) {
+            mouseClickTimes.push(Number((now - mouseLastTime).toFixed(2)));
+          }
+
+          mouseLastTime = now;
+          mouseNextExpected++;
+          updateMouseDebug();
+
+          if (mouseNextExpected === 10) {
+            mouseAllSamples.push([...mouseClickTimes]);
+
+            if (mouseAllSamples.length === 3) {
+              samplesField.value = JSON.stringify(mouseAllSamples);
+              updateMouseDebug();
+            } else {
+              buildMouseGrid();
+            }
+          }
+        }
+
+        if (typedBox) {
+          typedBox.addEventListener("keydown", (e) => {
+            blockPasting(e);
+
+            if (e.key === "Enter") {
+              e.preventDefault();
+              typedBox2.focus();
+              return;
+            }
+
+            if (allowedKey(e.key)) {
+              eventsPangram.push({ key: e.key, type: "down", t: nowMs() });
+            }
+          });
+
+          typedBox.addEventListener("keyup", (e) => {
+            if (allowedKey(e.key)) {
+              eventsPangram.push({ key: e.key, type: "up", t: nowMs() });
+            }
+          });
+        }
+
+        if (typedBox2) {
+          typedBox2.addEventListener("keydown", (e) => {
+            blockPasting(e);
+
+            if (e.key === "Enter") {
+              e.preventDefault();
+              form.requestSubmit();
+              return;
+            }
+
+            if (allowedKey(e.key)) {
+              eventsCoverage.push({ key: e.key, type: "down", t: nowMs() });
+            }
+          });
+
+          typedBox2.addEventListener("keyup", (e) => {
+            if (allowedKey(e.key)) {
+              eventsCoverage.push({ key: e.key, type: "up", t: nowMs() });
+            }
+          });
+        }
+
+        document.addEventListener("keydown", (e) => {
+          if (
+            document.activeElement === usernameBox ||
+            document.activeElement === typedBox ||
+            document.activeElement === typedBox2
+          ) {
+            return;
+          }
+
+          if (["1", "2", "3", "4", "5", "6"].includes(e.key) && graphicalAnimalIndexField) {
+            graphicalSelectedIndex = parseInt(e.key) - 1;
+            graphicalAnimalIndexField.value = graphicalSelectedIndex;
+
+            const colourOnSelected = colours[(graphicalColourIndex + graphicalSelectedIndex) % colours.length];
+            graphicalColourField.value = colourOnSelected;
+
+            if (graphicalErrorText) {
+              graphicalErrorText.textContent = "";
+            }
+
+            applyGraphicalColours();
+          }
+
+          if (e.key === "ArrowRight" && graphicalCards.length) {
+            e.preventDefault();
+            graphicalColourIndex = (graphicalColourIndex + 1) % colours.length;
+            applyGraphicalColours();
+          }
+
+          if (e.key === "ArrowLeft" && graphicalCards.length) {
+            e.preventDefault();
+            graphicalColourIndex = (graphicalColourIndex - 1 + colours.length) % colours.length;
+            applyGraphicalColours();
+          }
+        });
+
+        form.addEventListener("submit", (e) => {
+          if (eventsPangramField) {
+            eventsPangramField.value = JSON.stringify(eventsPangram);
+          }
+
+          if (eventsCoverageField) {
+            eventsCoverageField.value = JSON.stringify(eventsCoverage);
+          }
+
+          const step = form.querySelector('input[name="step"]').value;
+
+          if (step === "graphical") {
+            if (graphicalSelectedIndex === null || !graphicalColourField.value) {
+              e.preventDefault();
+              if (graphicalErrorText) {
+                graphicalErrorText.textContent = "ERROR: Please choose a graphical password.";
+              }
+            }
+          }
+
+          if (step === "mouse") {
+            if (mouseAllSamples.length !== 3) {
+              e.preventDefault();
+              alert("Please complete all 3 mouse attempts before submitting.");
+            }
+          }
+        });
+
+        applyGraphicalColours();
+        buildMouseGrid();
+      }
+    </script>
+  </body>
+</html>

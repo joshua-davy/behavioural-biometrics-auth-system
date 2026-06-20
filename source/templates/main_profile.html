@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Main Profile</title>
+  </head>
+  <body>
+    <h2>Main Profile</h2>
+    <p><b>Username:</b> {{ username }}</p>
+    {% if backup_used %}
+    <div style="color: red; font-weight: bold; border: 1px solid red; padding: 12px; margin-top: 20px">
+      Backup code was used to log in.<br />
+      This code is single-use and cannot be used again.<br />
+      You must redo all metrics before using the system normally again, then generate a new backup code.
+    </div>
+    {% endif %} {% if error %}
+    <p style="color: red; font-weight: bold">{{ error }}</p>
+    {% endif %} {% if success %}
+    <p style="color: green; font-weight: bold">{{ success }}</p>
+    {% endif %} {% if keystroke_result or graphical_result or mouse_result %}
+    <div style="margin-top: 20px">
+      <details>
+        <summary><b>Last Successful Login Debug</b></summary>
+        <div style="margin-top: 15px; border: 1px solid #ccc; padding: 15px">
+          <p><b>Keystroke Result:</b> {{ keystroke_result }}</p>
+          <p><b>Graphical Result:</b> {{ graphical_result }}</p>
+          <p><b>Mouse Result:</b> {{ mouse_result }}</p>
+          <hr />
+          {% if keystroke_avg_z %}
+          <p><b>Keystroke Average Z:</b> {{ keystroke_avg_z }}</p>
+          {% endif %} {% if keystroke_max_z %}
+          <p><b>Keystroke Max Z:</b> {{ keystroke_max_z }}</p>
+          {% endif %} {% if keystroke_similarity %}
+          <p><b>Keystroke Similarity:</b> {{ keystroke_similarity }}</p>
+          {% endif %} {% if mouse_avg_z %}
+          <p><b>Mouse Average Z:</b> {{ mouse_avg_z }}</p>
+          {% endif %} {% if mouse_max_z %}
+          <p><b>Mouse Max Z:</b> {{ mouse_max_z }}</p>
+          {% endif %} {% if mouse_similarity %}
+          <p><b>Mouse Similarity:</b> {{ mouse_similarity }}</p>
+          {% endif %}
+        </div>
+      </details>
+    </div>
+    {% endif %} {% if backupCode %}
+    <p style="margin-top: 20px"><b>Backup Code:</b></p>
+    <pre>{{ backupCode }}</pre>
+    <p><b>Used:</b> {{ backup_code_used }}</p>
+    {% endif %}
+    <form method="POST" style="margin-top: 20px">
+      <input type="hidden" name="username" value="{{ username }}" /><input
+        type="hidden"
+        name="action"
+        value="generate_backup" /><button type="submit">Generate Backup Code</button>
+    </form>
+    <form method="POST" style="margin-top: 10px">
+      <input type="hidden" name="username" value="{{ username }}" /><input
+        type="hidden"
+        name="action"
+        value="redo_all" /><label><b>Registration Code:</b></label
+      ><br /><input
+        type="text"
+        name="registration_code"
+        placeholder="Enter your original registration code"
+        required /><button type="submit">Redo All Metrics</button>
+    </form>
+    <form method="GET" action="/export-combined-attempts" style="margin-top: 20px">
+      <button type="submit">Export CSV</button>
+    </form>
+    <form method="GET" action="/main/login" style="margin-top: 20px">
+      <button type="submit">Back to Main Login</button>
+    </form>
+  </body>
+</html>

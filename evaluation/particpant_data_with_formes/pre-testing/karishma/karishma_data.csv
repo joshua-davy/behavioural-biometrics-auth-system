@@ -1,0 +1,11 @@
+id,username,is_impostor,keystroke_result,graphical_result,mouse_result,final_result,login_time_seconds,keystroke_time,graphical_time,mouse_time,login_attempt_number,backup_used,prompt_match,graphical_selected_animal,graphical_selected_colour,keystroke_avg_z,keystroke_max_z,keystroke_similarity,mouse_avg_z,mouse_max_z,mouse_similarity,FAR,FRR,TAR,TRR
+10,karishma,,not logged in,logged in,logged in,not logged in,22.103,11.648,0.0,2.78,3,0,1,cat,red,0.453,0.565,0.688,1.174,1.484,0.46,,,,
+9,karishma,,not logged in,logged in,logged in,not logged in,33.237,22.233,0.0,4.008,2,0,1,cat,red,0.5,1.875,0.667,0.728,1.036,0.579,,,,
+8,karishma,,not logged in,not logged in,logged in,not logged in,32.188,10.255,0.0,3.821,1,0,1,,,0.722,1.031,0.581,0.655,0.954,0.604,,,,
+7,karishma,,logged in,logged in,logged in,logged in,35.618,21.463,0.0,6.574,1,0,1,cat,red,0.169,0.358,0.855,0.792,1.645,0.558,,,,
+6,karishma,,logged in,logged in,logged in,logged in,37.395,24.48,0.0,5.358,1,0,1,cat,red,0.055,0.094,0.948,0.833,1.114,0.546,,,,
+5,karishma,,logged in,logged in,logged in,logged in,35.639,24.033,0.0,4.815,1,0,1,cat,red,0.047,0.051,0.955,0.801,1.057,0.555,,,,
+4,karishma,,logged in,logged in,logged in,logged in,36.942,21.712,0.0,4.553,1,0,1,cat,red,0.091,0.111,0.917,0.699,1.07,0.589,,,,
+3,karishma,,logged in,logged in,logged in,logged in,45.788,25.832,0.0,4.701,1,0,1,cat,red,0.173,0.185,0.853,0.555,0.898,0.643,,,,
+2,test1,,logged in,logged in,not logged in,logged in,40.423,10.653,0.0,3.581,1,0,1,dog,red,0.087,0.281,0.92,1.961,5.092,0.338,,,,
+1,joshua,,logged in,logged in,logged in,logged in,23.562,12.716,0.0,2.622,3,0,1,dog,red,0.233,0.461,0.811,0.701,2.138,0.588,,,,
